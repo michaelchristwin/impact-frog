@@ -1,100 +1,87 @@
 /** @jsxImportSource frog/jsx */
-/* eslint-disable react/jsx-key */
 
-import { Button, Frog, TextInput } from "frog";
-import { devtools } from "frog/dev";
-import { abi } from "@/ABIs/ProxyC";
-import { readContracts } from "@wagmi/core";
-import { handle } from "frog/next";
-import { serveStatic } from "frog/serve-static";
-import { config } from "@/config/wagmi.server.config";
-import { sepolia } from "viem/chains";
-import { Address } from "viem";
+import { Button, Frog, TextInput } from 'frog'
+import { devtools } from 'frog/dev'
+// import { neynar } from 'frog/hubs'
+import { handle } from 'frog/next'
+import { serveStatic } from 'frog/serve-static'
 
 const app = new Frog({
-  title: "Impact Frames 3",
-  assetsPath: "/",
-  basePath: "/api",
-
+  assetsPath: '/',
+  basePath: '/api',
   // Supply a Hub to enable frame verification.
   // hub: neynar({ apiKey: 'NEYNAR_FROG_FM' })
-});
-// test id = 0xFc793BCee784514Fa64b42896bcF967DCA9b29C5
+  title: 'Frog Frame',
+})
+
 // Uncomment to use Edge Runtime
 // export const runtime = 'edge'
-const frontendURL = process.env.NEXT_PUBLIC_FRONTEND as string;
 
-let contractAdress: string;
-let unitPrice: bigint | undefined;
-app.frame("/frame", async (c) => {
-  const { status } = c;
-  const query = c.req.query();
-  contractAdress = query.id;
-  const NFTContract = {
-    address: contractAdress as Address,
-    abi: abi,
-    chainId: sepolia.id,
-  } as const;
-  const result = await readContracts(config, {
-    contracts: [
-      {
-        ...NFTContract,
-        functionName: "tokenURI",
-        args: [BigInt(0)],
-      },
-      {
-        ...NFTContract,
-        functionName: "_unitPrice",
-      },
-    ],
-    multicallAddress: "0xcA11bde05977b3631167028862bE2a173976CA11",
-  });
-
-  const tokenURI = result[0].result;
-  if (!tokenURI) {
-    throw Error("tokenURI is undefined");
-  }
-  const data = await (await fetch(tokenURI)).json();
-  unitPrice = result[1].result;
-  console.log(data);
+app.frame('/', (c) => {
+  const { buttonValue, inputText, status } = c
+  const fruit = inputText || buttonValue
   return c.res({
-    browserLocation: `${frontendURL}/dashboard/collection/mint/${contractAdress}`,
     image: (
       <div
         style={{
-          display: "flex",
-          width: "100%",
-          height: "100%",
+          alignItems: 'center',
+          background:
+            status === 'response'
+              ? 'linear-gradient(to right, #432889, #17101F)'
+              : 'black',
+          backgroundSize: '100% 100%',
+          display: 'flex',
+          flexDirection: 'column',
+          flexWrap: 'nowrap',
+          height: '100%',
+          justifyContent: 'center',
+          textAlign: 'center',
+          width: '100%',
         }}
       >
-        <img alt="nft" src={data.image} style={{ borderRadius: "17px" }} />
+        <div
+          style={{
+            color: 'white',
+            fontSize: 60,
+            fontStyle: 'normal',
+            letterSpacing: '-0.025em',
+            lineHeight: 1.4,
+            marginTop: 30,
+            padding: '0 120px',
+            whiteSpace: 'pre-wrap',
+          }}
+        >
+          {status === 'response'
+            ? `Nice choice.${fruit ? ` ${fruit.toUpperCase()}!!` : ''}`
+            : 'Welcome!'}
+        </div>
       </div>
     ),
     intents: [
-      <TextInput placeholder="Enter quantity..." />,
-      <Button.Transaction target="/buy">Buy</Button.Transaction>,
-      status === "response" && <Button.Reset>Reset</Button.Reset>,
+      <TextInput placeholder="Enter custom fruit..." />,
+      <Button value="apples">Apples</Button>,
+      <Button value="oranges">Oranges</Button>,
+      <Button value="bananas">Bananas</Button>,
+      status === 'response' && <Button.Reset>Reset</Button.Reset>,
     ],
-  });
-});
+  })
+})
 
-app.transaction("/buy", (c) => {
-  const { inputText } = c;
-  console.log(inputText);
-  if (!unitPrice) {
-    throw Error("unitPrice is undefined");
-  }
-  return c.contract({
-    abi: abi,
-    chainId: "eip155:11155111",
-    value: BigInt(BigInt(inputText || 1) * unitPrice),
-    functionName: "mintBatch",
-    to: contractAdress as Address,
-    args: [BigInt(inputText || 1)],
-  });
-});
+devtools(app, { serveStatic })
 
-devtools(app, { serveStatic });
+export const GET = handle(app)
+export const POST = handle(app)
 
-export const GET = handle(app);
-export const POST = handle(app);
+// NOTE: That if you are using the devtools and enable Edge Runtime, you will need to copy the devtools
+// static assets to the public folder. You can do this by adding a script to your package.json:
+// ```json
+// {
+//   scripts: {
+//     "copy-static": "cp -r ./node_modules/frog/_lib/ui/.frog ./public/.frog"
+//   }
+// }
+// ```
+// Next, you'll want to set up the devtools to use the correct assets path:
+// ```ts
+// devtools(app, { assetsPath: '/.frog' })
+// ```

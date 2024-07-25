@@ -1,34 +1,26 @@
 {
-  "name": "impact-frog",
-  "version": "0.1.0",
+  "name": "parody",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
+    "deploy": "vercel",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
-    "@tanstack/react-query": "^5.51.11",
-    "@web3modal/wagmi": "^5.0.8",
-    "frog": "^0.15.2",
-    "hono": "^4.5.1",
-    "next": "14.1.0",
+    "frog": "latest",
+    "hono": "^4",
     "react": "^18",
     "react-dom": "^18",
-    "react-hot-toast": "^2.4.1",
-    "viem": "^2.18.0",
-    "wagmi": "^2.12.0"
+    "next": "14.1.0"
   },
   "devDependencies": {
     "typescript": "^5",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
-    "autoprefixer": "^10.0.1",
-    "postcss": "^8",
-    "tailwindcss": "^3.3.0",
-    "eslint": "^8",
-    "eslint-config-next": "14.1.0"
+    "vercel": "^32.4.1"
   }
 }
